@@ -6,16 +6,20 @@ class Layer:
     def __init__(self):
         self.optimizable = True
 
+    def __call__(self, input: np.ndarray):
+        return self.forward(input)
+
     @abstractmethod
-    def forward(self):
+    def forward(self, input: np.ndarray):
         pass
 
     @abstractmethod
-    def backward(self):
+    def backward(self, grads: np.ndarray):
         pass
 
     def frozen(self):
         self.optimizable = False
+
 
 
 class Linear(Layer):
@@ -51,6 +55,9 @@ class Linear(Layer):
         self.grads['b'] = np.sum(grads, axis = 1, keepdims=True)
         return grads @ self.params['W'].T
 
+    def deactivate_weight_decay(self):
+        self.weight_decay = False
+
 class Conv2D(Layer):
     def __init__(self):
         super().__init__()
@@ -79,6 +86,17 @@ class ReLU(Layer):
         conduct backward process
         """
         return np.where(self.input < 0, 0, grads)
+
+class Logistic(Layer):
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def forward(self, input: np.ndarray):
+        pass
+
+    def backward(self, grads: np.ndarray):
+        pass
 
 class CrossEntropyLoss(Layer):
     def __init__(self, model = None):
