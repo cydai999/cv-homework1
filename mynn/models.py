@@ -1,5 +1,4 @@
 import pickle
-import numpy as np
 from ops import *
 from abc import abstractmethod
 
@@ -46,6 +45,9 @@ class MLPModel(NeuralNetworkModel):
                 except ValueError:
                     print('activate function not been finished')
 
+    def __call__(self, input: np.ndarray):
+        return self.forward(input)
+
     def forward(self, input: np.ndarray):
         assert self.size_list and self.act_func, 'Model has not been correctly initialized, try using load_model method or directly provide size_list and act_func'
         for layer in self.layer_list:
@@ -73,7 +75,7 @@ class MLPModel(NeuralNetworkModel):
             if i < len(self.size_list) - 2:
                 self.layer_list.append(self.act_func_map[self.act_func])
 
-    def save_model(self, save_dir):
+    def save_model(self, save_path):
         param_list = [self.size_list, self.act_func]
         for layer in self.layer_list:
             if layer not in self.act_func_map.values():
@@ -84,12 +86,15 @@ class MLPModel(NeuralNetworkModel):
                     'weight_decay_param': layer.weight_decay_param
                 })
 
-        with open(save_dir, 'wb') as f:
+        with open(save_path, 'wb') as f:
             pickle.dump(param_list, f)
 
 class CNNModel(NeuralNetworkModel):
     def __init__(self):
         super().__init__()
+        pass
+
+    def __call__(self):
         pass
 
     def forward(self):
