@@ -1,10 +1,14 @@
 import os.path
+from os.path import exists
 
 import numpy as np
-from tqdm import tqdm
+
 
 class Runner:
-    def __init__(self, model, optimizer, loss_fn, metric, batch_size, lr_scheduler=None):
+    """
+    The class to train and evaluate the model
+    """
+    def __init__(self, model, loss_fn, metric, batch_size=32, optimizer=None, lr_scheduler=None):
         self.model = model
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
@@ -20,13 +24,14 @@ class Runner:
         self.valid_score = []
 
     def train(self, train_set, valid_set, epoch=5, save_dir=None, log_iter=100):
+
+        assert self.optimizer, 'Optimizer has not been loaded.'
+
         if not save_dir:
             save_dir = 'best_model'
 
         if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
-
-        best_model_save_path = None
+            os.makedirs(save_dir)
 
         for k in range(epoch):
             # permute the data
@@ -53,27 +58,29 @@ class Runner:
                 self.valid_score.append(valid_score)
 
                 if i % log_iter == 0:
-                    print(f'epoch:{k}, iter:{i}'
-                          f'train_loss:{train_loss}, train_score:{train_score}'
-                          f'valid_loss:{valid_loss}, valid_score:{valid_score}')
+                    print(f'epoch:{k+1}, iter:{i}\n'
+                          f'train_loss:{train_loss}, train_score:{train_score}\n'
+                          f'valid_loss:{valid_loss}, valid_score:{valid_score}\n')
 
             if self.lr_scheduler:
                 self.lr_scheduler.step()
 
-            save_path = os.path.join(save_dir, f'epoch_{k}')
+            model_dir = os.path.join(save_dir, 'models')
+            if not os.path.exists(model_dir):
+                os.mkdir(model_dir)
+
+            save_path = os.path.join(model_dir, f'epoch_{k+1}.pickle')
             self.model.save_model(save_path)
 
             if self.valid_score[-1] > self.best_score:
                 print(f'Best score has been updated:{self.best_score:.5f}->{self.valid_score[-1]:.5f}')
-                best_model_save_path = os.path.join(save_dir, f'best_model(epoch{k}).pickle')
+                best_model_save_path = os.path.join(model_dir, f'best_model.pickle')
                 self.best_score = self.valid_score[-1]
-
-        if best_model_save_path:
-            self.model.save_model(best_model_save_path)
+                self.model.save_model(best_model_save_path)
 
 
     def eval(self, data, labels):
         predicts = self.model(data)
-        loss = self.loss_fn(predicts)
+        loss = self.loss_fn(labels, predicts)
         score = self.metric(labels, predicts)
         return loss, score

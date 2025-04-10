@@ -1,10 +1,9 @@
-from optimizers import Optimizer
 from abc import abstractmethod
 
 class LRScheduler:
-    def __init__(self, optimizer: Optimizer):
+    def __init__(self, optimizer):
         self.optimizer = optimizer
-        self.step = 0
+        self.step_count = 0
 
     @abstractmethod
     def step(self):
@@ -17,10 +16,10 @@ class StepLR(LRScheduler):
         self.gamma = gamma
 
     def step(self):
-        self.step += 1
-        if self.step == self.step_size:
+        self.step_count += 1
+        if self.step_count == self.step_size:
             self.optimizer.lr *= self.gamma
-            self.step = 0
+            self.step_count = 0
 
 class MultiStepLR(LRScheduler):
     def __init__(self, optimizer, step_list, gamma=0.5):
@@ -29,8 +28,8 @@ class MultiStepLR(LRScheduler):
         self.gamma = gamma
 
     def step(self):
-        self.step += 1
-        if self.step in self.step_list:
+        self.step_count += 1
+        if self.step_count in self.step_list:
             self.optimizer.lr *= self.gamma
 
 class ExponentialLR(LRScheduler):
