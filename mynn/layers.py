@@ -6,9 +6,6 @@ class Layer:
     def __init__(self):
         self.optimizable = True
 
-    def __call__(self, input: np.ndarray):
-        return self.forward(input)
-
     @abstractmethod
     def forward(self, input: np.ndarray):
         pass
@@ -26,7 +23,7 @@ class Linear(Layer):
     def __init__(self, in_dim, out_dim, weight_initialize_method=np.random.normal, weight_decay=True, weight_decay_param=1e-4):
         super().__init__()
         self.params = {
-            'W':weight_initialize_method(size=(in_dim, out_dim)),
+            'W':weight_initialize_method(size=(in_dim, out_dim)) * 0.1,
             'b':np.zeros((1, out_dim))
         }
         self.grads = {'W': None, 'b': None}
@@ -35,6 +32,9 @@ class Linear(Layer):
 
         self.weight_decay = weight_decay
         self.weight_decay_param = weight_decay_param
+
+    def __call__(self, input: np.ndarray):
+        return self.forward(input)
 
     def forward(self, X: np.ndarray):
         """
@@ -52,7 +52,7 @@ class Linear(Layer):
         :return: [batch_size, in_dim]
         """
         self.grads['W'] = self.input.T @ grads
-        self.grads['b'] = np.sum(grads, axis = 1, keepdims=True)
+        self.grads['b'] = np.sum(grads, axis = 0, keepdims=True)
         return grads @ self.params['W'].T
 
     def deactivate_weight_decay(self):
@@ -61,6 +61,9 @@ class Linear(Layer):
 class Conv2D(Layer):
     def __init__(self):
         super().__init__()
+
+    def __call__(self, input: np.ndarray):
+        pass
 
     def forward(self):
         pass
@@ -73,6 +76,9 @@ class ReLU(Layer):
         super().__init__()
         self.frozen()
         self.input = None
+
+    def __call__(self, input: np.ndarray):
+        return self.forward(input)
 
     def forward(self, X: np.ndarray):
         """
@@ -92,6 +98,9 @@ class Logistic(Layer):
         super().__init__()
         pass
 
+    def __call__(self, input: np.ndarray):
+        pass
+
     def forward(self, input: np.ndarray):
         pass
 
@@ -99,7 +108,7 @@ class Logistic(Layer):
         pass
 
 class CrossEntropyLoss(Layer):
-    def __init__(self, model = None):
+    def __init__(self, model):
         super().__init__()
         self.optimizable = False
 
@@ -109,8 +118,10 @@ class CrossEntropyLoss(Layer):
         self.labels = None
         self.grads = None
 
+    def __call__(self, labels, predicts):
+        return self.forward(labels, predicts)
 
-    def forward(self, predicts, labels):
+    def forward(self, labels, predicts):
         """
         Calculate loss with a softmax layer
         :param predicts: [batch_size, d]
@@ -123,7 +134,7 @@ class CrossEntropyLoss(Layer):
         # softmax
         P = self.softmax(predicts)
         # calculate loss
-        loss = - np.sum(np.log(P[np.arange(bs), labels]))
+        loss = - np.sum(np.log(P[np.arange(bs), labels] + 1e-8))
         return loss / bs
 
     def backward(self):
