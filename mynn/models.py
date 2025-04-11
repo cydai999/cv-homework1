@@ -30,7 +30,7 @@ class MLPModel(NeuralNetworkModel):
         self.size_list = size_list
         self.layer_list = []
         self.act_func = act_func
-        self.act_func_map = {'ReLU': ReLU(), 'Sigmoid': Sigmoid()}
+        self.act_func_map = {'ReLU': ReLU(), 'Sigmoid': Sigmoid(), 'LeakyReLU': LeakyReLU()}
         self.weight_decay_list = kwargs.get('weight_decay_list')
         assert not self.weight_decay_list or len(self.weight_decay_list) == len(self.size_list) - 1, 'weight decay doesn\'t match'
 
@@ -95,27 +95,6 @@ class MLPModel(NeuralNetworkModel):
 
         with open(save_path, 'wb') as f:
             pickle.dump(param_list, f)
-
-class CNNModel(NeuralNetworkModel):
-    def __init__(self):
-        super().__init__()
-        pass
-
-    def __call__(self):
-        pass
-
-    def forward(self):
-        pass
-
-    def backward(self):
-        pass
-
-    def load_model(self):
-        pass
-
-    def save_model(self):
-        pass
-
 
 
 

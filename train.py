@@ -30,13 +30,13 @@ for i in range(5):
 train_data = np.concatenate(train_data_list, axis=0)
 train_labels = np.concatenate(train_labels_list, axis=0)
 
-# idx = np.random.permutation(train_data.shape[0])
-# train_data, train_labels = train_data[idx], train_labels[idx]
-valid_data, valid_labels = train_data[:10000], train_labels[:10000]
-train_data, train_labels = train_data[10000:], train_labels[10000:]
+idx = np.random.permutation(train_data.shape[0])
+train_data, train_labels = train_data[idx], train_labels[idx]
+# valid_data, valid_labels = train_data[:10000], train_labels[:10000]
+# train_data, train_labels = train_data[10000:], train_labels[10000:]
 
-# valid_data, valid_labels = train_data[:100], train_labels[:100]
-# train_data, train_labels = train_data[10000: 11000], train_labels[10000: 11000]
+valid_data, valid_labels = train_data[:1000], train_labels[:1000]
+train_data, train_labels = train_data[10000: 20000], train_labels[10000: 20000]
 
 # normalize
 train_data = train_data / train_data.max()
@@ -54,22 +54,23 @@ test_set = [test_data, test_labels]
 
 # init model
 size_list = [3072, 1000, 10]
-act_func = 'ReLU'
+act_func = 'LeakyReLU'
 weight_decay_list = [1e-5, 1e-5]
 init_lr = 1e-3
-step_size = 1
-gamma = 0.5
+step_size = 5
+gamma = 0.8
 batch_size = 32
 
 model = nn.models.MLPModel(size_list=size_list, act_func=act_func, weight_decay_list=weight_decay_list)
-optimizer = nn.optimizers.SGD(model, init_lr=init_lr)
+# optimizer = nn.optimizers.SGD(model, init_lr=init_lr)
+optimizer = nn.optimizers.SGDMomentum(model, init_lr=init_lr)
 lr_scheduler = nn.lr_schedulers.StepLR(optimizer, step_size=step_size, gamma=gamma)
 metric = nn.metric.accuracy
 loss_fn = nn.loss_fn.CrossEntropyLoss(model)
 runner = nn.runner.Runner(model, loss_fn, metric, batch_size=batch_size, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
 # train
-epoch = 5
+epoch = 10
 save_dir = f'./saved_models/{time.strftime('%Y-%m-%d-%H-%M', time.localtime())}'
 log_iter = 100
 print('[Train]Begin training...')
@@ -113,7 +114,7 @@ params = {'model':{
               'weight_decay_list': weight_decay_list
           },
           'optimizer':{
-              'type': 'sgd',
+              'type': 'momentum',
               'init_lr': init_lr
           },
           'lr_scheduler':{
