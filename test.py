@@ -1,6 +1,8 @@
 import os
 import pickle
 import numpy as np
+import argparse
+
 import mynn as nn
 
 # set seed
@@ -22,7 +24,12 @@ test_labels = test_dict[b'labels']
 test_set = [test_data, test_labels]
 
 # load model
-model_path = './saved_models/2025-04-10-22-19/models/best_model.pickle'
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--model_path', '-p', type=str, default='./saved_models/best_model/models/best_model.pickle')
+args = parser.parse_args()
+
+model_path = args.model_path
 
 model = nn.models.MLPModel(save_dir=model_path)
 

@@ -2,3 +2,5 @@
 dataset/
 saved_models/
 /__pycache__/
+*.zip
+*.pdf

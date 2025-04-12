@@ -1,6 +1,4 @@
-import os.path
-from os.path import exists
-
+import os
 import numpy as np
 
 

@@ -1,5 +1,4 @@
 import pickle
-
 from .layers import *
 from abc import abstractmethod
 

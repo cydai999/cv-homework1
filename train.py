@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import time
 import matplotlib.pyplot as plt
+import argparse
 
 import mynn as nn
 
@@ -32,11 +33,11 @@ train_labels = np.concatenate(train_labels_list, axis=0)
 
 idx = np.random.permutation(train_data.shape[0])
 train_data, train_labels = train_data[idx], train_labels[idx]
-# valid_data, valid_labels = train_data[:10000], train_labels[:10000]
-# train_data, train_labels = train_data[10000:], train_labels[10000:]
+valid_data, valid_labels = train_data[:10000], train_labels[:10000]
+train_data, train_labels = train_data[10000:], train_labels[10000:]
 
-valid_data, valid_labels = train_data[:1000], train_labels[:1000]
-train_data, train_labels = train_data[10000: 20000], train_labels[10000: 20000]
+# valid_data, valid_labels = train_data[:1000], train_labels[:1000]
+# train_data, train_labels = train_data[10000: 20000], train_labels[10000: 20000]
 
 # normalize
 train_data = train_data / train_data.max()
@@ -52,14 +53,31 @@ test_data = test_data / test_data.max()
 test_labels = test_dict[b'labels']
 test_set = [test_data, test_labels]
 
+# get parameter from terminal
+parser = argparse.ArgumentParser()
+parser.add_argument('--hidden_size', '-hs', type=int, default=1000, help='the number of neurons of the hidden layer')
+parser.add_argument('--act_func', '-a', type=str, default='LeakyReLU', help='activation function')
+parser.add_argument('--weight_decay_param', '-wd', type=float, default=1e-5, help='parameter of weight decay')
+parser.add_argument('--init_lr', '-lr', type=float, default=1e-2, help='initialized learning rate')
+parser.add_argument('--step_size', '-s', type=int, default=5, help='learning rate decay period')
+parser.add_argument('--gamma', '-g', type=float, default=0.1, help='parameter of learning rate decay')
+parser.add_argument('--batch_size','-bs', type=int, default=32)
+parser.add_argument('--epoch', '-e', type=int, default=10)
+parser.add_argument('--log_iter', '-l', type=int, default=100, help='period of print loss and accuracy')
+
+args = parser.parse_args()
+
 # init model
-size_list = [3072, 1000, 10]
-act_func = 'LeakyReLU'
-weight_decay_list = [1e-5, 1e-5]
-init_lr = 1e-3
-step_size = 5
-gamma = 0.8
-batch_size = 32
+hidden_size = args.hidden_size
+act_func = args.act_func
+weight_decay_param = args.weight_decay_param
+init_lr = args.init_lr
+step_size = args.step_size
+gamma = args.gamma
+batch_size = args.batch_size
+
+size_list = [3072, hidden_size, 10]
+weight_decay_list = [weight_decay_param, weight_decay_param]
 
 model = nn.models.MLPModel(size_list=size_list, act_func=act_func, weight_decay_list=weight_decay_list)
 # optimizer = nn.optimizers.SGD(model, init_lr=init_lr)
@@ -70,9 +88,10 @@ loss_fn = nn.loss_fn.CrossEntropyLoss(model)
 runner = nn.runner.Runner(model, loss_fn, metric, batch_size=batch_size, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
 # train
-epoch = 10
-save_dir = f'./saved_models/{time.strftime('%Y-%m-%d-%H-%M', time.localtime())}'
-log_iter = 100
+epoch = args.epoch
+# save_dir = f'./saved_models/{time.strftime('%Y-%m-%d-%H-%M', time.localtime())}'
+save_dir = f'./saved_models/test'
+log_iter = args.log_iter
 print('[Train]Begin training...')
 runner.train(train_set, valid_set, epoch, save_dir, log_iter)
 print('[Train]Training completed!')

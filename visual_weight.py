@@ -1,13 +1,20 @@
+import argparse
 import pickle
 import matplotlib.pyplot as plt
 
 def visual(W, name):
-    plt.imshow(W)
+    plt.imshow(W * 10, cmap='seismic', vmin=-0.5, vmax=0.5)
     plt.title(name)
     plt.axis('off')
     plt.show()
 
-model_path = './saved_models/2025-04-10-22-26/models/best_model.pickle'
+# load model
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--model_path', '-p', type=str, default='./saved_models/best_model/models/best_model.pickle')
+args = parser.parse_args()
+
+model_path = args.model_path
 
 with open(model_path, 'rb') as f:
     param_list = pickle.load(f, encoding='bytes')

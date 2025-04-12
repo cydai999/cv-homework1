@@ -49,103 +49,109 @@ test_labels = test_dict[b'labels']
 test_set = [test_data, test_labels]
 
 # set params
-init_lrs = [1e-3, 1e-4, 1e-5]
-hidden_sizes = [2000, 1000, 500]
-weight_decay_params = [1e-3, 1e-4, 1e-5]
+# init_lrs = [1e-2, 1e-3, 1e-4]
+# hidden_sizes = [2000, 1000, 500]
+# weight_decay_params = [1e-3, 1e-4, 1e-5]
+init_lrs = [1e-2]
+hidden_sizes = [1000]
+weight_decay_params = [1e-5]
 
 # init model
 act_func = 'LeakyReLU'
 step_size = 5
 batch_size = 32
-gamma = 0.8
+# gamma = 0.8
+gammas = [1, 0.5, 0.1, 0.05]
 
 for init_lr in init_lrs:
     for hidden_size in hidden_sizes:
         for weight_decay_param in weight_decay_params:
-            size_list = [3072, hidden_size, 10]
-            weight_decay_list = [weight_decay_param, weight_decay_param]
+            for gamma in gammas:
+                size_list = [3072, hidden_size, 10]
+                weight_decay_list = [weight_decay_param, weight_decay_param]
 
-            model = nn.models.MLPModel(size_list=size_list, act_func=act_func, weight_decay_list=weight_decay_list)
-            optimizer = nn.optimizers.SGDMomentum(model, init_lr=init_lr)
-            lr_scheduler = nn.lr_schedulers.StepLR(optimizer, step_size=step_size, gamma=gamma)
-            metric = nn.metric.accuracy
-            loss_fn = nn.loss_fn.CrossEntropyLoss(model)
-            runner = nn.runner.Runner(model, loss_fn, metric, batch_size=batch_size, optimizer=optimizer,
-                                      lr_scheduler=lr_scheduler)
+                model = nn.models.MLPModel(size_list=size_list, act_func=act_func, weight_decay_list=weight_decay_list)
+                optimizer = nn.optimizers.SGDMomentum(model, init_lr=init_lr)
+                lr_scheduler = nn.lr_schedulers.StepLR(optimizer, step_size=step_size, gamma=gamma)
+                metric = nn.metric.accuracy
+                loss_fn = nn.loss_fn.CrossEntropyLoss(model)
+                runner = nn.runner.Runner(model, loss_fn, metric, batch_size=batch_size, optimizer=optimizer,
+                                          lr_scheduler=lr_scheduler)
 
-            # train
-            epoch = 10
-            save_dir = f'./saved_models/{init_lr}-{hidden_size}-{weight_decay_param}'
-            log_iter = 100
-            print(f'init_lr:{init_lr}\n'
-                  f'hidden_size:{hidden_size}\n'
-                  f'weight_decay_param:{weight_decay_param}')
-            print('[Train]Begin training...')
-            runner.train(train_set, valid_set, epoch, save_dir, log_iter)
-            print('[Train]Training completed!')
+                # train
+                epoch = 20
+                save_dir = f'./saved_models/{init_lr}-{hidden_size}-{weight_decay_param}-{gamma}'
+                log_iter = 100
+                print(f'init_lr:{init_lr}\n'
+                      f'hidden_size:{hidden_size}\n'
+                      f'weight_decay_param:{weight_decay_param}\n'
+                      f'gamma:{gamma}')
+                print('[Train]Begin training...')
+                runner.train(train_set, valid_set, epoch, save_dir, log_iter)
+                print('[Train]Training completed!')
 
-            # test
-            test_data, test_labels = test_set
-            print('[Test]Begin testing...')
-            loss, score = runner.eval(test_data, test_labels)
-            print('[Test]Testing completed!')
-            print(f'[Test]loss:{loss}, score:{score}')
+                # test
+                test_data, test_labels = test_set
+                print('[Test]Begin testing...')
+                loss, score = runner.eval(test_data, test_labels)
+                print('[Test]Testing completed!')
+                print(f'[Test]loss:{loss}, score:{score}')
 
-            # save result
-            result_path = os.path.join(save_dir, 'testing_result.json')
-            result = {'loss': loss, 'score': score}
-            with open(result_path, 'w', encoding='utf-8') as f:
-                json.dump(result, f)
+                # save result
+                result_path = os.path.join(save_dir, 'testing_result.json')
+                result = {'loss': loss, 'score': score}
+                with open(result_path, 'w', encoding='utf-8') as f:
+                    json.dump(result, f)
 
-            # plot
-            fg, axis = plt.subplots(1, 2)
-            axis[0].plot(runner.train_loss, label='train_loss', color='r')
-            axis[0].plot(runner.valid_loss, label='valid_loss', color='b')
-            axis[0].set_xlabel('iteration')
-            axis[0].set_ylabel('loss')
-            axis[0].legend(loc='upper right')
+                # plot
+                fg, axis = plt.subplots(1, 2)
+                axis[0].plot(runner.train_loss, label='train_loss', color='r')
+                axis[0].plot(runner.valid_loss, label='valid_loss', color='b')
+                axis[0].set_xlabel('iteration')
+                axis[0].set_ylabel('loss')
+                axis[0].legend(loc='upper right')
 
-            axis[1].plot(runner.train_score, label='train_score', color='r')
-            axis[1].plot(runner.valid_score, label='valid_score', color='b')
-            axis[1].set_xlabel('iteration')
-            axis[1].set_ylabel('score')
-            axis[1].legend(loc='upper right')
+                axis[1].plot(runner.train_score, label='train_score', color='r')
+                axis[1].plot(runner.valid_score, label='valid_score', color='b')
+                axis[1].set_xlabel('iteration')
+                axis[1].set_ylabel('score')
+                axis[1].legend(loc='upper right')
 
-            fg.tight_layout()
-            plt.savefig(os.path.join(save_dir, 'loss_accuracy_plot.png'))
+                fg.tight_layout()
+                plt.savefig(os.path.join(save_dir, 'loss_accuracy_plot.png'))
 
-            # save_params
-            params = {'model': {
-                'size_list': size_list,
-                'act_func': act_func,
-                'weight_decay_list': weight_decay_list
-            },
-                'optimizer': {
-                    'type': 'momentum',
-                    'init_lr': init_lr
+                # save_params
+                params = {'model': {
+                    'size_list': size_list,
+                    'act_func': act_func,
+                    'weight_decay_list': weight_decay_list
                 },
-                'lr_scheduler': {
-                    'type': 'stepLR',
-                    'step_size': step_size,
-                    'gamma': gamma
-                },
-                'metric': {
-                    'type': 'accuracy'
-                },
-                'loss function': {
-                    'type': 'cross entropy'
-                },
-                'train': {
-                    'batch_size': batch_size,
-                    'epoch': epoch,
-                    'log_iter': log_iter
+                    'optimizer': {
+                        'type': 'momentum',
+                        'init_lr': init_lr
+                    },
+                    'lr_scheduler': {
+                        'type': 'stepLR',
+                        'step_size': step_size,
+                        'gamma': gamma
+                    },
+                    'metric': {
+                        'type': 'accuracy'
+                    },
+                    'loss function': {
+                        'type': 'cross entropy'
+                    },
+                    'train': {
+                        'batch_size': batch_size,
+                        'epoch': epoch,
+                        'log_iter': log_iter
+                    }
                 }
-            }
 
-            json_path = os.path.join(save_dir, 'params.json')
+                json_path = os.path.join(save_dir, 'params.json')
 
-            with open(json_path, 'w', encoding='utf-8') as f:
-                json.dump(params, f)
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump(params, f)
 
 
 
