@@ -90,7 +90,7 @@ runner = nn.runner.Runner(model, loss_fn, metric, batch_size=batch_size, optimiz
 # train
 epoch = args.epoch
 # save_dir = f'./saved_models/{time.strftime('%Y-%m-%d-%H-%M', time.localtime())}'
-save_dir = f'./saved_models/test'
+save_dir = f'./saved_models/test_train'
 log_iter = args.log_iter
 print('[Train]Begin training...')
 runner.train(train_set, valid_set, epoch, save_dir, log_iter)
